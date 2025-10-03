@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ post.title }}{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-md-10 scroll-reveal">
+            <article class="bg-white shadow-lg border-0 rounded-4 p-4 p-md-5">
+                {% if post.image_url %}
+                <img src="{{ post.image_url }}" class="img-fluid rounded mb-4" alt="{{ post.title }}">
+                {% endif %}
+                <h1 class="text-primary-gradient mb-3">{{ post.title }}</h1>
+                <p class="text-muted small">
+                    <i class="fas fa-user"></i> Ditulis oleh {{ post.author }} pada {{ post.created_at.strftime('%d %B %Y') }}
+                </p>
+                <hr class="mb-4">
+                <div class="blog-post-content fs-5 lh-base">
+                    {{ post.content | nl2br }}
+                </div>
+            </article>
+            <div class="mt-4 text-center scroll-reveal">
+                <a href="{{ url_for('blog') }}" class="btn btn-outline-secondary rounded-pill">
+                    <i class="fas fa-arrow-left"></i> Kembali ke Blog
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

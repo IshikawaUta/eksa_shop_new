@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+
+{% block title %}{% if post %}Edit Postingan{% else %}Buat Postingan Baru{% endif %}{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-lg border-0 rounded-4 p-4 p-md-5">
+                <h2 class="card-title text-center mb-4 text-primary-gradient">
+                    {% if post %}Edit Postingan Blog{% else %}Buat Postingan Blog Baru{% endif %}
+                </h2>
+                <form action="" method="POST" enctype="multipart/form-data"> <div class="mb-3">
+                        <label for="title" class="form-label">Judul Postingan</label>
+                        <input type="text" class="form-control" id="title" name="title" value="{{ post.title if post else '' }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="image" class="form-label">Gambar Utama</label>
+                        <input class="form-control" type="file" id="image" name="image" accept="image/*">
+                        {% if post and post.image_url %}
+                            <small class="text-muted mt-2 d-block">Gambar saat ini: <a href="{{ post.image_url }}" target="_blank">{{ post.image_url }}</a></small>
+                            <img src="{{ post.image_url }}" alt="Gambar Postingan" class="img-fluid rounded mt-2" style="max-height: 200px;">
+                        {% endif %}
+                    </div>
+                    <div class="mb-3">
+                        <label for="content" class="form-label">Isi Postingan</label>
+                        <textarea class="form-control" id="content" name="content" rows="10" required>{{ post.content if post else '' }}</textarea>
+                    </div>
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary btn-lg rounded-pill">
+                            {% if post %}Perbarui Postingan{% else %}Publikasikan{% endif %}
+                        </button>
+                        <a href="{{ url_for('blog') }}" class="btn btn-outline-secondary btn-lg rounded-pill">Batal</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

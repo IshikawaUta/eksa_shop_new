@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+
+{% block title %}Tambah Produk Baru{% endblock %}
+
+{% block content %}
+    <div class="container mt-4 mb-5 flex-grow-1">
+    <h1 class="mb-4 text-center" style="font-size: 1.5rem;">Tambah Produk Baru</h1>
+    <div class="card shadow-sm rounded-3 mx-auto" style="max-width: 600px;">
+        <div class="card-body p-4">
+            <form method="POST" action="{{ url_for('add_product') }}" enctype="multipart/form-data">
+                <div class="mb-3">
+                    <label for="name" class="form-label">Nama Produk</label>
+                    <input type="text" class="form-control rounded-pill" id="name" name="name" required>
+                </div>
+                <div class="mb-3">
+                    <label for="category" class="form-label">Kategori Produk</label>
+                    <input type="text" class="form-control rounded-pill" id="category" name="category" placeholder="Contoh: Aplikasi, Templates, Mobile" required>
+                </div>
+                <div class="mb-3">
+                    <label for="description" class="form-label">Deskripsi</label>
+                    <textarea class="form-control rounded-3" id="description" name="description" rows="5" required></textarea>
+                </div>
+                <div class="mb-3">
+                    <label for="price" class="form-label">Harga (Rp)</label>
+                    <input type="number" class="form-control rounded-pill" id="price" name="price" step="0.01" required>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="os" class="form-label">Aplikasi</label>
+                    <input type="text" class="form-control rounded-pill" id="os" name="os" placeholder="Contoh: Admin App, Mobile App, Web App">
+                </div>
+                <div class="mb-3">
+                    <label for="specifications" class="form-label">Menu Aplikasi</label>
+                    <textarea class="form-control rounded-3" id="specifications" name="specifications" rows="3" placeholder="Contoh:&#10;- Beranda&#10;- Produk&#10;- Kontak"></textarea>
+                </div>
+                <div class="mb-3">
+                    <label for="packages" class="form-label">Fitur Aplikasi</label>
+                    <textarea class="form-control rounded-3" id="packages" name="packages" rows="3" placeholder="Contoh:&#10;- Add&#10;- Edit&#10;- Delete"></textarea>
+                </div>
+                <div class="mb-3">
+                    <label for="advantages" class="form-label">Tool dan Framework</label>
+                    <textarea class="form-control rounded-3" id="advantages" name="advantages" rows="3" placeholder="Contoh:&#10;- Flask&#10;- Bootstrap&#10;- MongoDB Atlas"></textarea>
+                </div>
+                <div class="mb-3">
+                    <label for="notes" class="form-label">Catatan</label>
+                    <textarea class="form-control rounded-3" id="notes" name="notes" rows="3" placeholder="Tambahkan catatan khusus tentang produk di sini."></textarea>
+                </div>
+
+                <div class="mb-3">
+                    <label for="images" class="form-label">Gambar Produk (Bisa lebih dari satu)</label>
+                    <input type="file" class="form-control rounded-pill" id="images" name="images" accept="image/*" multiple> {# Tambahkan 'multiple' #}
+                    <small class="form-text text-muted">Anda bisa memilih beberapa file gambar sekaligus.</small>
+                </div>
+                <div class="d-grid gap-2 mt-4">
+                    <button type="submit" class="btn btn-primary btn-lg rounded-pill">Tambah Produk</button>
+                    <a href="{{ url_for('index') }}" class="btn btn-outline-secondary btn-lg rounded-pill">Batal</a>
+                </div>
+            </form>
+        </div>
+    </div>
+    </div>
+{% endblock %}
