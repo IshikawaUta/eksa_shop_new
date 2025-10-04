@@ -97,6 +97,17 @@
                             <p class="card-text text-muted">{{ product.notes | nl2br }}</p>
                         {% endif %}
                     {% endif %}
+                    {# Tampilkan Detail Tambahan jika tersedia #} 
+                    {% if product.os or product.specifications or product.packages or product.advantages or product.notes %}
+                        {% endif %}
+                    
+                    {% if product.demo_url %}
+                    <div class="mb-3">
+                        <a href="{{ product.demo_url }}" target="_blank" class="btn btn-outline-primary rounded-pill w-100 fw-bold">
+                            <i class="fas fa-play-circle me-2"></i> Lihat Demo Produk
+                        </a>
+                    </div>
+                    {% endif %}
                     {# Akhir Detail Tambahan #}
                     
                     <div class="mt-auto d-flex flex-wrap align-items-center gap-2">
@@ -115,7 +126,7 @@
                                 </button>
                             </form>
                         {% endif %}
-                        <a href="{{ url_for('index') }}" class="btn btn-secondary mt-3 rounded-pill">
+                        <a href="{{ url_for('product') }}" class="btn btn-secondary rounded-pill">
                             <i class="fas fa-arrow-left"></i> Kembali ke Daftar Produk
                         </a>
                     </div>

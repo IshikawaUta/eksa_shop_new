@@ -6,11 +6,11 @@
     <meta name="google-site-verification" content="4lrHvQitrv8jBov9zef11OnhHJ-N0WWk1i5UStdcQgs"/>
 
     {# Default Meta Description, bisa di-override di setiap halaman #}
-    <meta name="description" content="{% block meta_description %}Eksa Shop menyediakan solusi pembuatan website profesional, aplikasi kustom, dan template modern. Kami melayani konsultasi, desain, pengembangan, dan dukungan teknis.{% endblock %}">
+    <meta name="description" content="{% block meta_description %}Eksa Shop menyediakan solusi pembuatan website profesional, aplikasi kustom, dan template modern. Kami melayani konsultasi, desain, dan pengembangan.{% endblock %}">
     <meta name="keywords" content="Eksa Shop, website, aplikasi kustom, template, web developer">
 
     {# Open Graph Meta Tags Default, bisa di-override #}
-    <meta property="og:title" content="{% block og_title %}Eksa Shop | Solusi Digital & Pengembangan Web Terlengkap{% endblock %}">
+    <meta property="og:title" content="{% block og_title %}Eksa Shop | Solusi Digital & Pengembangan Web dan Aplikasi Terlengkap{% endblock %}">
     <meta property="og:description" content="{% block og_description %}Jelajahi layanan Eksa Shop, solusi pembuatan website, pengembangan aplikasi, dan template UI/UX modern. Tingkatkan bisnis Anda dengan kehadiran digital yang kuat.{% endblock %}">
     <meta property="og:image" content="{% block og_image %}https://res.cloudinary.com/dzsqaauqn/image/upload/v1759515072/Gemini_Generated_Image_ty15obty15obty15_tyesh1.jpg{% endblock %}">
     <meta property="og:url" content="{% block og_url %}{{ request.url }}{% endblock %}">
@@ -57,6 +57,11 @@
                     <li class="nav-item">
                         <a class="nav-link" href="{{ url_for('product') }}">
                             <i class="fas fa-box-open text-primary-gradient"></i> Produk
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('website_services') }}">
+                            <i class="fas fa-laptop-code text-primary-gradient"></i> Kostum Website
                         </a>
                     </li>
                     <li class="nav-item">
@@ -108,7 +113,7 @@
                         </li>
                     {% else %}
                         {# Dipisah menjadi dua li terpisah #}
-                        <li class="nav-item ms-lg-3">
+                        <li class="nav-item ms-lg-2">
                             <a class="nav-link" href="{{ url_for('login') }}">
                                 <i class="fas fa-sign-in-alt text-primary-gradient"></i> Login
                             </a>

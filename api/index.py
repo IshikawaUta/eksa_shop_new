@@ -311,6 +311,11 @@ def blog_detail(id):
     flash('Postingan blog tidak ditemukan.', 'danger')
     return redirect(url_for('blog'))
 
+@app.route('/website_services')
+@cache.cached(timeout=2)
+def website_services():
+    return render_template('website_services.html')
+
 @app.route('/help')
 @cache.cached(timeout=2)
 def help_page():
@@ -662,6 +667,7 @@ def add_product():
         packages = request.form.get('packages')
         advantages = request.form.get('advantages')
         notes = request.form.get('notes')
+        demo_url = request.form.get('demo_url', '').strip()
         
         image_files = request.files.getlist('images')
         uploaded_image_urls = []
@@ -686,7 +692,8 @@ def add_product():
             'specifications': specifications,
             'packages': packages,
             'advantages': advantages,
-            'notes': notes
+            'notes': notes,
+            'demo_url': demo_url
         }
         products_collection.insert_one(product_data)
         flash('Produk berhasil ditambahkan!', 'success')
@@ -715,6 +722,7 @@ def edit_product(id):
         packages = request.form.get('packages')
         advantages = request.form.get('advantages')
         notes = request.form.get('notes')
+        demo_url = request.form.get('demo_url', '').strip()
 
         kept_image_urls_str = request.form.get('kept_image_urls', '')
         kept_image_urls = [url.strip() for url in kept_image_urls_str.split(',') if url.strip()]
@@ -743,7 +751,8 @@ def edit_product(id):
                 'specifications': specifications,
                 'packages': packages,
                 'advantages': advantages,
-                'notes': notes
+                'notes': notes,
+                'demo_url': demo_url
             }}
         )
         flash('Produk berhasil diperbarui!', 'success')
@@ -1215,7 +1224,10 @@ def sitemap():
         {'loc': url_for('login', _external=True), 'lastmod': datetime.now().isoformat(), 'changefreq': 'monthly', 'priority': '0.8'},
         {'loc': url_for('register', _external=True), 'lastmod': datetime.now().isoformat(), 'changefreq': 'monthly', 'priority': '0.8'},
         {'loc': url_for('view_cart', _external=True), 'lastmod': datetime.now().isoformat(), 'changefreq': 'weekly', 'priority': '0.6'},
+        {'loc': url_for('product', _external=True), 'lastmod': datetime.now().isoformat(), 'changefreq': 'weekly', 'priority': '0.6'},
         {'loc': url_for('help_page', _external=True), 'lastmod': datetime.now().isoformat(), 'changefreq': 'monthly', 'priority': '0.5'},
+        {'loc': url_for('website_services', _external=True), 'lastmod': datetime.now().isoformat(), 'changefreq': 'monthly', 'priority': '0.5'},
+        {'loc': url_for('contact_page', _external=True), 'lastmod': datetime.now().isoformat(), 'changefreq': 'monthly', 'priority': '0.5'},
         {'loc': url_for('privacy_policy', _external=True), 'lastmod': datetime.now().isoformat(), 'changefreq': 'monthly', 'priority': '0.5'},
         {'loc': url_for('terms_and_conditions', _external=True), 'lastmod': datetime.now().isoformat(), 'changefreq': 'monthly', 'priority': '0.5'},
         {'loc': url_for('forgot_password', _external=True), 'lastmod': datetime.now().isoformat(), 'changefreq': 'monthly', 'priority': '0.4'},

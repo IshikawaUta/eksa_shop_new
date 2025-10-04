@@ -60,6 +60,13 @@
                             <a href="{{ url_for('product_detail', id=product._id) }}" class="btn btn-outline-primary btn-sm rounded-pill">
                                 <i class="fas fa-info-circle"></i> Detail
                             </a>
+                            {% if product.os or product.specifications or product.packages or product.advantages or product.notes %}
+                            {% endif %}
+                            {% if product.demo_url %}
+                                <a href="{{ product.demo_url }}" target="_blank" class="btn btn-outline-primary btn-sm rounded-pill">
+                                    <i class="fas fa-play-circle me-2"></i> Demo Produk
+                                </a>
+                            {% endif %}
                             <form action="{{ url_for('add_to_cart', product_id=product._id) }}" method="POST" class="d-inline">
                                 <button type="submit" class="btn btn-primary btn-sm rounded-pill">
                                     <i class="fas fa-cart-plus"></i> Tambah ke Keranjang
