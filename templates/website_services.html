@@ -159,12 +159,12 @@
         const budget = document.getElementById('budget').value;
         const message = document.getElementById('message').value;
         
-        let text = `*FORMULIR KONSULTASI Eksa Shop*%0A%0A`;
-        text += `*Nama:* ${nama}%0A`;
-        text += `*WhatsApp:* ${whatsapp}%0A`;
-        text += `*Jenis Proyek:* ${projectType}%0A`;
-        text += `*Anggaran:* ${budget ? budget : 'Tidak Disebutkan'}%0A%0A`;
-        text += `*Deskripsi Kebutuhan:*%0A${message}`;
+        let text = `*FORMULIR KONSULTASI Eksa Shop*\n\n`;
+        text += `*Nama:* ${nama}\n`;
+        text += `*WhatsApp:* ${whatsapp}\n`;
+        text += `*Jenis Proyek:* ${projectType}\n`;
+        text += `*Anggaran:* ${budget ? budget : 'Tidak Disebutkan'}\n\n`;
+        text += `*Deskripsi Kebutuhan:*\n${message}`;
         
         const encodedText = encodeURIComponent(text);
 
@@ -172,7 +172,7 @@
         
         window.open(whatsappUrl, '_blank');
         
-        alert('Data berhasil dikirim ke WhatsApp. Silakan konfirmasi pengiriman di jendela baru!');
+        alert('Permintaan penawaran telah diproses. Anda akan diarahkan ke WhatsApp untuk mengkonfirmasi dan mengirim pesan.');
         
         document.getElementById('whatsappForm').reset();
 
