@@ -26,7 +26,7 @@
                 <h5 class="card-title text-primary">{{ post.title }}</h5>
                 <p class="card-text text-muted">Ditulis oleh {{ post.author }} pada {{ post.created_at.strftime('%d-%m-%Y %H:%M') }}</p>
                 <div class="blog-content">
-                    {{ (post.content[:120] + '...') | nl2br }}
+                    {{ (post.content[:100] + '...') | nl2br }}
                 </div>
                 <div class="mt-3 d-flex justify-content-between">
                     <a href="{{ url_for('blog_detail', id=post._id) }}" class="btn btn-sm btn-outline-primary rounded-pill">Baca Selengkapnya</a>
