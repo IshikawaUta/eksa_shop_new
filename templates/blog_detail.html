@@ -2,6 +2,19 @@
 
 {% block title %}{{ post.title }}{% endblock %}
 
+{% block head_meta %}
+    <meta name="description" content="{{ post.content | striptags | truncate(150, True, '...') }}">
+    <meta property="og:title" content="{{ post.title }}" />
+    <meta property="og:description" content="{{ post.content | striptags | truncate(150, True, '...') }}" />
+    <meta property="og:image" content="{{ post.image_url if post.image_url else 'https://placehold.co/1200x630/cccccc/333333?text=Gambar+Produk' }}" />
+    <meta property="og:url" content="{{ request.url }}" />
+    <meta property="og:type" content="blog" />
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="{{ post.title }}">
+    <meta name="twitter:description" content="{{ post.content | striptags | truncate(150, True, '...') }}">
+    <meta name="twitter:image" content="{{ post.image_url if post.image_url else 'https://placehold.co/1200x630/cccccc/333333?text=Gambar+Produk' }}">
+{% endblock %}
+
 {% block content %}
 <div class="container my-5">
     <div class="row justify-content-center">
