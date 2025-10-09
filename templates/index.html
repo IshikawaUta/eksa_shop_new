@@ -23,6 +23,31 @@
         </div>
     </div>
 
+    <div class="mobile-none" style="background-color: #e4e4e454;">
+    <div class="container py-3">
+        <div class="row align-items-center">
+            <div class="col-lg-6 text-lg-start mb-4 mb-lg-0 scroll-reveal">
+                <h2 class="fw-bold text-primary">Akses Penuh di <span class="box-phone-highlight">Semua Perangkat</span></h2>
+                <p class="lead text-navy">
+                    Semua solusi web dan aplikasi dari Eksa Shop dirancang dengan prinsip Mobile-First. 
+                    Pastikan bisnis Anda tampil sempurna, cepat, dan mudah digunakan, baik di desktop, tablet, maupun smartphone.
+                    Desain yang responsif menjamin pengalaman pengguna (UX) yang optimal di mana saja.
+                </p>
+                <a href="{{ url_for('website_services') }}" class="btn btn-outline-primary rounded-pill mt-3">
+                    Mulai Sekarang <i class="fa-solid fa-arrow-right"></i>
+                </a>
+            </div>
+
+            <div class="col-lg-6 d-none d-lg-block scroll-reveal">
+                <div class="d-flex justify-content-center align-items-end position-relative" style="height: 350px;">
+                    <img src="{{ url_for('static', filename='img/eksa_desktop.png') }}" alt="Eksa Shop Desktop View" class="img-fluid position-absolute" style="max-height: 100%; width: auto; bottom: 0; left: 60%; transform: translateX(-65%); z-index: 10;">
+                    <img src="{{ url_for('static', filename='img/eksa_mobile.png') }}" alt="Eksa Shop Mobile View" class="img-fluid position-absolute" style="max-height: 80%; width: auto; bottom: 30px; left: 60%; transform: translateX(5%); z-index: 20; max-width: 180px;">
+                </div>
+            </div>
+        </div>
+    </div>
+    </div>
+
     <div class="bg-toska-100">
     <div class="container flex-grow-1">
     <div class="text-center mb-4 pt-4 scroll-reveal">
@@ -54,7 +79,7 @@
                             {% endif %}
                             {% if product.demo_url %}
                                 <a href="{{ product.demo_url }}" target="_blank" class="btn btn-outline-primary btn-sm rounded-pill">
-                                    <i class="fas fa-play-circle me-2"></i> Demo Produk
+                                    <i class="fas fa-play-circle me-2"></i>Demo Produk
                                 </a>
                             {% endif %}
                             <form action="{{ url_for('add_to_cart', product_id=product._id) }}" method="POST" class="d-inline">
@@ -93,7 +118,7 @@
         {% endif %}
     </div>
         <a href="{{ url_for('product') }}" class="btn btn-outline-primary mt-3 mb-4 rounded-pill">
-            Lihat Semua Produk <i class="fa-solid fa-arrow-right"></i>
+            Lihat Semua Produk
         </a>
     </div>
     </div>

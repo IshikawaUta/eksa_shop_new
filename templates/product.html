@@ -64,7 +64,7 @@
                             {% endif %}
                             {% if product.demo_url %}
                                 <a href="{{ product.demo_url }}" target="_blank" class="btn btn-outline-primary btn-sm rounded-pill">
-                                    <i class="fas fa-play-circle me-2"></i> Demo Produk
+                                    <i class="fas fa-play-circle me-2"></i>Demo Produk
                                 </a>
                             {% endif %}
                             <form action="{{ url_for('add_to_cart', product_id=product._id) }}" method="POST" class="d-inline">

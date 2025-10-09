@@ -723,6 +723,9 @@ code {
     .mb-menu-70 {
         margin-bottom: 55px;
     }
+    .mobile-none {
+        display: none !important;
+    }
 }
 .bg-toska-100 {
     background-color: #cedfe7;
@@ -733,4 +736,12 @@ code {
 }
 .bg-navy {
     background-color: #000080 !important;
+}
+@media (max-width: 1000px) {
+    .mobile-nav-bottom {
+        display: flex;
+    }
+    .mobile-none {
+        display: none !important;
+    }
 }
