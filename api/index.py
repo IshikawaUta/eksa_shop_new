@@ -209,6 +209,7 @@ def inject_cart_count():
     return dict(cart_count=cart_count)
 
 PER_PAGE = 3
+BLOG_PER_PAGE = 6
 
 @app.route('/')
 @cache.cached(timeout=2)
@@ -299,8 +300,33 @@ def product():
 @app.route('/blog')
 @cache.cached(timeout=2)
 def blog():
-    posts = list(posts_collection.find().sort('created_at', -1))
-    return render_template('blog.html', posts=posts)
+    search_query = request.args.get('q', '').strip()
+    page = request.args.get('page', 1, type=int)
+
+    query = {}
+    if search_query:
+        query['$or'] = [
+            {'title': {'$regex': re.compile(search_query, re.IGNORECASE)}},
+            {'content': {'$regex': re.compile(search_query, re.IGNORECASE)}}
+        ]
+
+    total_posts = posts_collection.count_documents(query)
+    total_pages = ceil(total_posts / BLOG_PER_PAGE)
+    
+    if total_pages > 0 and page > total_pages:
+        page = total_pages
+    elif total_pages == 0:
+        page = 1
+
+    skip_count = (page - 1) * BLOG_PER_PAGE
+    posts = list(posts_collection.find(query).sort('created_at', -1).skip(skip_count).limit(BLOG_PER_PAGE))
+    print(f"MongoDB Blog Query: {query}, Page: {page}, Skip: {skip_count}, Limit: {BLOG_PER_PAGE}, Total Posts: {total_posts}")
+    return render_template('blog.html', 
+                           posts=posts, 
+                           search_query=search_query,
+                           current_page=page,
+                           total_pages=total_pages,
+                           total_posts=total_posts)
 
 @app.route('/blog/<id>')
 @cache.cached(timeout=2)
