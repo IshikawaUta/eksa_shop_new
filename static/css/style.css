@@ -121,8 +121,7 @@ body {
 }
 .card-img-top {
     width: 100%;
-    height: 200px;
-    object-fit: contain;
+    height: 300px;
     background-color: #f8f9fa;
 }
 .badge-floating {

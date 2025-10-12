@@ -37,7 +37,7 @@
     <div class="col scroll-reveal">
         <div class="card h-100 shadow-sm rounded-3">
             {% if post.image_url %}
-            <img src="{{ post.image_url }}" class="card-img-top blog-list-img" alt="{{ post.title }}" style="max-height: 200px; object-fit: contain;border-bottom: 1px solid #216bc0; padding: 1rem 1rem;">
+            <img src="{{ post.image_url }}" class="card-img-top blog-list-img" alt="{{ post.title }}" style="width: 100%; border-bottom: 1px solid #216bc0;">
             {% endif %}
             <div class="card-body">
                 <h5 class="card-title text-primary">{{ post.title }}</h5>
