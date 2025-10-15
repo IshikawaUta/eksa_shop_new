@@ -61,6 +61,7 @@ products_collection = db['products']
 users_collection = db['users']
 reviews_collection = db['reviews']
 posts_collection = db['posts']
+blog_comments_collection = db['blog_comments']
 
 IMGUR_CLIENT_ID = os.getenv('IMGUR_CLIENT_ID')
 if not IMGUR_CLIENT_ID:
@@ -150,6 +151,33 @@ Tim Eksa Shop
         
     except Exception as e:
         print(f"Gagal mengirim email struk untuk pesanan {str(order_id)}: {e}")
+
+def get_threaded_comments(post_id):
+    """Mengambil semua komentar dan menyusunnya menjadi struktur berantai (threaded)."""
+    
+    all_comments = list(blog_comments_collection.find({'post_id': post_id}).sort('created_at', 1))
+    
+    comments_by_id = {str(c['_id']): c for c in all_comments}
+    
+    for comment in all_comments:
+        comment['replies'] = []
+        if 'parent_id' not in comment:
+            comment['parent_id'] = None
+    
+    top_level_comments = []
+
+    for comment in all_comments:
+        parent_id = comment['parent_id']
+        
+        if parent_id:
+            parent_id_str = str(parent_id)
+            
+            if parent_id_str in comments_by_id:
+                comments_by_id[parent_id_str]['replies'].append(comment)
+        else:
+            top_level_comments.append(comment)
+            
+    return top_level_comments
 
 @app.template_filter('nl2br')
 def nl2br_filter(s):
@@ -331,9 +359,22 @@ def blog():
 @app.route('/blog/<id>')
 @cache.cached(timeout=2)
 def blog_detail(id):
-    post = posts_collection.find_one({'_id': ObjectId(id)})
+    try:
+        post_id = ObjectId(id)
+        post = posts_collection.find_one({'_id': post_id})
+    except:
+        post = None
+
     if post:
-        return render_template('blog_detail.html', post=post)
+        comments = get_threaded_comments(post_id)
+        
+        is_user_logged_in = session.get('user_id') is not None
+        
+        return render_template('blog_detail.html', 
+                               post=post, 
+                               comments=comments, 
+                               is_user_logged_in=is_user_logged_in)
+    
     flash('Postingan blog tidak ditemukan.', 'danger')
     return redirect(url_for('blog'))
 
@@ -868,6 +909,79 @@ def delete_blog_post(id):
     else:
         flash('Gagal menghapus postingan blog.', 'danger')
     return redirect(url_for('blog'))
+
+@app.route('/submit_blog_reply/<post_id>/<parent_comment_id>', methods=['POST'])
+def submit_blog_reply(post_id, parent_comment_id):
+    if not session.get('user_id'):
+        flash('Silakan login untuk memberikan balasan.', 'danger')
+        return redirect(url_for('login'))
+
+    user_id = session['user_id']
+    user_name = session['username']
+    
+    comment_body = request.form.get('comment_body')
+    
+    if not comment_body:
+        flash('Balasan wajib diisi.', 'danger')
+        return redirect(url_for('blog_detail', id=post_id))
+
+    try:
+        reply_data = {
+            'post_id': ObjectId(post_id),
+            'parent_id': ObjectId(parent_comment_id),
+            'user_id': ObjectId(user_id),
+            'user_name': user_name,
+            'comment_body': comment_body,
+            'created_at': datetime.now()
+        }
+        blog_comments_collection.insert_one(reply_data)
+        
+        flash('Balasan Anda berhasil dikirim!', 'success')
+    except Exception as e:
+        flash(f'Terjadi kesalahan saat menyimpan balasan: {e}', 'danger')
+        app.logger.error(f"Error submitting blog reply: {e}")
+
+    return redirect(url_for('blog_detail', id=post_id))
+
+@app.route('/submit_blog_comment/<post_id>', methods=['POST'])
+@login_required
+def submit_blog_comment(post_id):
+    user_id = session['user_id']
+    user_name = session['username']
+    
+    comment_body = request.form.get('comment_body')
+    parent_id_str = request.form.get('parent_id')
+    
+    if not comment_body or not comment_body.strip():
+        flash('Komentar tidak boleh kosong.', 'danger')
+        return redirect(url_for('blog_detail', id=post_id))
+
+    try:
+        post_obj_id = ObjectId(post_id)
+        
+        comment_data = {
+            'post_id': post_obj_id,
+            'user_id': ObjectId(user_id),
+            'user_name': user_name,
+            'comment_body': comment_body.strip(),
+            'created_at': datetime.now()
+        }
+        
+        if parent_id_str and parent_id_str != 'None':
+            comment_data['parent_id'] = ObjectId(parent_id_str)
+            flash_message = 'Balasan Anda berhasil dikirim!'
+        else:
+            flash_message = 'Komentar Anda berhasil dikirim!'
+
+        blog_comments_collection.insert_one(comment_data)
+        cache.delete_memoized(blog_detail, post_id)
+        
+        flash(flash_message, 'success')
+    except Exception as e:
+        flash(f'Terjadi kesalahan saat menyimpan komentar: {e}', 'danger')
+        app.logger.error(f"Error submitting blog comment/reply: {e}")
+
+    return redirect(url_for('blog_detail', id=post_id))
 
 @app.route('/submit_review/<product_id>', methods=['POST'])
 def submit_review(product_id):
