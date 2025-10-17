@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+
+{% block title %}Hasil Kuis: {{ result.quiz_title }}{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="card shadow-lg">
+        <div class="card-header {% if result.passed %}bg-success{% else %}bg-danger{% endif %} text-white text-center">
+            <h1 class="h3 mb-0">Hasil Kuis: {{ result.quiz_title }}</h1>
+        </div>
+        <div class="card-body text-center">
+            <h2 class="mb-4">Skor Anda: 
+                <span class="display-3 fw-bold {% if result.passed %}text-success{% else %}text-danger{% endif %}">
+                    {{ result.score }}%
+                </span>
+            </h2>
+
+            <div class="row justify-content-center mb-4">
+                <div class="col-md-6">
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            Total Pertanyaan:
+                            <span class="badge bg-primary rounded-pill">{{ result.total_questions }}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            Jawaban Benar:
+                            <span class="badge bg-success rounded-pill">{{ result.correct_answers }}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            Skor Minimal Lulus:
+                            <span class="badge bg-info rounded-pill">{{ result.min_score }}%</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            {% if result.passed %}
+                <div class="alert alert-success mt-4">
+                    <h4 class="alert-heading"><i class="fas fa-trophy me-2"></i> Selamat! Anda Lulus!</h4>
+                    <p>Skor Anda ({{ result.score }}%) telah melampaui skor minimal ({{ result.min_score }}%).</p>
+                    <hr>
+                    {% if result.certificate_url %}
+                        <a href="{{ result.certificate_url }}" class="btn btn-warning btn-lg">
+                            <i class="fas fa-file-pdf me-2"></i> Unduh Sertifikat
+                        </a>
+                    {% else %}
+                        <p class="mb-0">Fitur Pembuatan Sertifikat sedang dalam pengembangan dan akan segera tersedia.</p>
+                    {% endif %}
+                </div>
+            {% else %}
+                <div class="alert alert-danger mt-4">
+                    <h4 class="alert-heading"><i class="fas fa-times-circle me-2"></i> Maaf, Anda Belum Lulus.</h4>
+                    <p>Skor Anda ({{ result.score }}%) belum mencapai skor minimal ({{ result.min_score }}%). Coba lagi!</p>
+                </div>
+            {% endif %}
+
+            <div class="mt-5">
+                <a href="{{ url_for('quiz_list') }}" class="btn btn-outline-primary me-2">
+                    <i class="fas fa-list me-2"></i> Kembali ke Daftar Kuis
+                </a>
+                {% if not result.passed %}
+                <a href="{{ url_for('start_quiz', quiz_id=result.quiz_id) }}" class="btn btn-info">
+                    <i class="fas fa-redo-alt me-2"></i> Coba Lagi
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

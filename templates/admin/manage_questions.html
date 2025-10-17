@@ -1,0 +1,108 @@
+{% extends 'base.html' %}
+
+{% block title %}Admin | Kelola Soal - {{ quiz.title }}{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <h1 class="mb-3">Kelola Soal: {{ quiz.title }}</h1>
+    <p class="lead">Total Soal: {{ questions|length }}. Min. Skor Lulus: {{ quiz.min_score }}%</p>
+    
+    <a href="{{ url_for('admin_quizzes') }}" class="btn btn-outline-secondary mb-4">
+        <i class="fas fa-arrow-left me-2"></i> Kembali ke Daftar Kuis
+    </a>
+    
+    {% include 'includes/flash.html' %}
+
+    <div class="card mb-5 shadow-sm">
+        <div class="card-header bg-success text-white">
+            <h5 class="mb-0">Tambah Soal Baru</h5>
+        </div>
+        <div class="card-body">
+            <form method="POST" action="{{ url_for('admin_add_question', quiz_id=quiz._id) }}">
+                <div class="mb-3">
+                    <label for="question_text" class="form-label">Teks Pertanyaan</label>
+                    <textarea class="form-control" id="question_text" name="question_text" rows="3" required></textarea>
+                </div>
+                
+                <label class="form-label fw-bold">Pilihan Jawaban (Min. 2)</label>
+                {% for i in range(1, 6) %}
+                <div class="input-group mb-3">
+                    <span class="input-group-text">Opsi {{ i }}</span>
+                    <input type="text" class="form-control" name="option_{{ i }}" placeholder="Teks Pilihan Jawaban">
+                    <div class="input-group-text">
+                        <input class="form-check-input mt-0" type="radio" name="correct_option_index" value="{{ i }}" aria-label="Kunci Jawaban">
+                        <span class="ms-2 small">Kunci</span>
+                    </div>
+                </div>
+                {% endfor %}
+                
+                <button type="submit" class="btn btn-success mt-3">
+                    <i class="fas fa-plus-circle me-2"></i> Simpan Soal
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <h2 class="mb-3">Daftar Soal</h2>
+    {% if questions %}
+        {% for question in questions %}
+        <div class="card mb-4 border-info">
+            <div class="card-body">
+                <h5 class="card-title">Soal {{ loop.index }}</h5>
+                <p class="card-text fw-bold">{{ question.question_text | nl2br }}</p>
+                
+                <ul class="list-group mb-3">
+                    {% for option in question.options %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center {% if loop.index == question.correct_option_index %}list-group-item-success fw-bold{% endif %}">
+                        {{ option }}
+                        {% if loop.index == question.correct_option_index %}
+                        <span class="badge bg-success"><i class="fas fa-check"></i> Kunci Jawaban</span>
+                        {% endif %}
+                    </li>
+                    {% endfor %}
+                </ul>
+
+                <button class="btn btn-sm btn-warning me-2" data-bs-toggle="collapse" data-bs-target="#editCollapse_{{ question._id }}">
+                    <i class="fas fa-edit"></i> Edit
+                </button>
+                <form method="POST" action="{{ url_for('admin_delete_question', quiz_id=quiz._id, id=question._id) }}" class="d-inline" onsubmit="return confirm('Yakin hapus soal ini?');">
+                    <button type="submit" class="btn btn-sm btn-danger">
+                        <i class="fas fa-trash"></i> Hapus
+                    </button>
+                </form>
+
+                <div class="collapse mt-3" id="editCollapse_{{ question._id }}">
+                    <div class="card card-body bg-light">
+                        <form method="POST" action="{{ url_for('admin_edit_question', quiz_id=quiz._id, id=question._id) }}">
+                            <div class="mb-3">
+                                <label class="form-label">Teks Pertanyaan (Edit)</label>
+                                <textarea class="form-control" name="question_text" rows="3" required>{{ question.question_text }}</textarea>
+                            </div>
+                            
+                            <label class="form-label fw-bold">Pilihan Jawaban (Edit)</label>
+                            {% for i in range(1, 6) %}
+                            <div class="input-group mb-3">
+                                <span class="input-group-text">Opsi {{ i }}</span>
+                                {% set option_value = question.options[i-1] if (i-1) < question.options|length else '' %}
+                                <input type="text" class="form-control" name="option_{{ i }}" value="{{ option_value }}" placeholder="Teks Pilihan Jawaban">
+                                <div class="input-group-text">
+                                    <input class="form-check-input mt-0" type="radio" name="correct_option_index" value="{{ i }}" {% if i == question.correct_option_index %}checked{% endif %} aria-label="Kunci Jawaban">
+                                    <span class="ms-2 small">Kunci</span>
+                                </div>
+                            </div>
+                            {% endfor %}
+                            
+                            <button type="submit" class="btn btn-primary mt-3">
+                                <i class="fas fa-save me-2"></i> Update Soal
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="alert alert-info">Kuis ini belum memiliki soal. Silakan tambahkan di atas.</div>
+    {% endif %}
+</div>
+{% endblock %}

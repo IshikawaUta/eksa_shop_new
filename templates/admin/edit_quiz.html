@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+
+{% block title %}Admin | Edit Kuis: {{ quiz.title }}{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <h1 class="mb-4">Edit Kuis: {{ quiz.title }}</h1>
+    
+    {% include 'includes/flash.html' %}
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <form method="POST" action="{{ url_for('admin_edit_quiz', id=quiz._id) }}">
+                <div class="mb-3">
+                    <label for="title" class="form-label">Judul Kuis</label>
+                    <input type="text" class="form-control" id="title" name="title" value="{{ quiz.title }}" required>
+                </div>
+
+                <div class="mb-3">
+                    <label for="category_id" class="form-label">Kategori</label>
+                    <select class="form-select" id="category_id" name="category_id" required>
+                        {% for category in categories %}
+                        <option value="{{ category._id }}" {% if category._id == quiz.category_id %}selected{% endif %}>
+                            {{ category.name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label for="min_score" class="form-label">Skor Minimal Lulus (%)</label>
+                    <input type="number" class="form-control" id="min_score" name="min_score" value="{{ quiz.min_score }}" min="1" max="100" required>
+                    <div class="form-text">Contoh: 80 (artinya harus benar 80% dari total soal)</div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="description" class="form-label">Deskripsi Kuis</label>
+                    <textarea class="form-control" id="description" name="description" rows="4">{{ quiz.description }}</textarea>
+                </div>
+                
+                <button type="submit" class="btn btn-warning">
+                    <i class="fas fa-save me-2"></i> Simpan Perubahan
+                </button>
+                <a href="{{ url_for('admin_quizzes') }}" class="btn btn-outline-secondary ms-2">Batal</a>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

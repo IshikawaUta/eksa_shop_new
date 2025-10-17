@@ -62,6 +62,8 @@ users_collection = db['users']
 reviews_collection = db['reviews']
 posts_collection = db['posts']
 blog_comments_collection = db['blog_comments']
+quizzes_collection = db['quizzes']
+quiz_results_collection = db['quiz_results']
 
 IMGUR_CLIENT_ID = os.getenv('IMGUR_CLIENT_ID')
 if not IMGUR_CLIENT_ID:
@@ -1345,6 +1347,358 @@ def generate_receipt(order_id):
         flash('Terjadi kesalahan saat membuat struk. Silakan coba lagi atau hubungi dukungan.', 'danger')
         return redirect(url_for('render_checkout_success', order_id=order_id))
     
+# =================================================================
+# --- Kategori (Admin) ---
+# =================================================================
+@app.route('/admin/categories', methods=['GET', 'POST'])
+@admin_required
+def admin_categories():
+    if request.method == 'POST':
+        category_name = request.form.get('name')
+        if category_name:
+            db.categories.insert_one({'name': category_name})
+            flash('Kategori berhasil ditambahkan.', 'success')
+        else:
+            flash('Nama kategori tidak boleh kosong.', 'danger')
+        return redirect(url_for('admin_categories'))
+        
+    categories = list(db.categories.find())
+    return render_template('admin/categories.html', categories=categories)
+
+# =================================================================
+# --- Kuis (Admin) ---
+# =================================================================
+@app.route('/admin/quizzes', methods=['GET'])
+@admin_required
+def admin_quizzes():
+    quizzes = list(db.quizzes.find())
+    
+    category_map = {str(cat['_id']): cat['name'] for cat in db.categories.find()}
+    
+    for quiz in quizzes:
+        cat_id_str = str(quiz.get('category_id'))
+        quiz['category_name'] = category_map.get(cat_id_str, 'Tidak Berkategori')
+        
+    return render_template('admin/quizzes.html', quizzes=quizzes)
+
+@app.route('/admin/quizzes/add', methods=['GET', 'POST'])
+@admin_required
+def admin_add_quiz():
+    categories = list(db.categories.find())
+    if request.method == 'POST':
+        try:
+            category_id = request.form.get('category_id')
+            min_score = int(request.form.get('min_score', 80))
+            
+            new_quiz = {
+                'title': request.form['title'],
+                'description': request.form.get('description'),
+                'category_id': ObjectId(category_id),
+                'min_score': min_score,
+                'created_at': datetime.now(),
+                'question_count': 0 
+            }
+            result = db.quizzes.insert_one(new_quiz)
+            flash(f'Kuis "{new_quiz["title"]}" berhasil dibuat. Silakan tambahkan soal.', 'success')
+            
+            return redirect(url_for('admin_manage_questions', quiz_id=result.inserted_id))
+            
+        except Exception as e:
+            flash(f'Gagal membuat kuis: {e}', 'danger')
+            
+    return render_template('admin/add_quiz.html', categories=categories)
+
+@app.route('/admin/quizzes/edit/<id>', methods=['GET', 'POST'])
+@admin_required
+def admin_edit_quiz(id):
+    categories = list(db.categories.find())
+    try:
+        quiz_id = ObjectId(id)
+        quiz = db.quizzes.find_one({'_id': quiz_id})
+    except:
+        quiz = None
+
+    if not quiz:
+        flash('Kuis tidak ditemukan.', 'danger')
+        return redirect(url_for('admin_quizzes'))
+
+    if request.method == 'POST':
+        try:
+            category_id = request.form.get('category_id')
+            min_score = int(request.form.get('min_score', 80))
+            
+            update_data = {
+                'title': request.form['title'],
+                'description': request.form.get('description'),
+                'category_id': ObjectId(category_id),
+                'min_score': min_score,
+                'updated_at': datetime.now()
+            }
+            
+            db.quizzes.update_one(
+                {'_id': quiz_id},
+                {'$set': update_data}
+            )
+            flash('Kuis berhasil diperbarui!', 'success')
+            return redirect(url_for('admin_quizzes'))
+        except Exception as e:
+            flash(f'Gagal memperbarui kuis: {e}', 'danger')
+            return redirect(url_for('admin_edit_quiz', id=id))
+
+    return render_template('admin/edit_quiz.html', quiz=quiz, categories=categories)
+
+@app.route('/admin/quizzes/delete/<id>', methods=['POST'])
+@admin_required
+def admin_delete_quiz(id):
+    try:
+        quiz_id = ObjectId(id)
+        
+        db.quizzes.delete_one({'_id': quiz_id})
+        db.questions.delete_many({'quiz_id': quiz_id})
+        
+        flash('Kuis dan semua pertanyaannya berhasil dihapus.', 'success')
+    except Exception as e:
+        flash(f'Gagal menghapus kuis: {e}', 'danger')
+        
+    return redirect(url_for('admin_quizzes'))
+
+
+# =================================================================
+# --- Soal (Admin) ---
+# =================================================================
+
+@app.route('/admin/quizzes/manage/<quiz_id>')
+@admin_required
+def admin_manage_questions(quiz_id):
+    try:
+        quiz_id_obj = ObjectId(quiz_id)
+        quiz = db.quizzes.find_one({'_id': quiz_id_obj})
+        
+        questions_cursor = db.questions.find({'quiz_id': quiz_id_obj})
+        
+        questions = []
+        for question in questions_cursor:
+            if 'question_text' not in question:
+                question['question_text'] = question.get('text', "**Teks Pertanyaan Hilang**") 
+            
+            if 'options' not in question:
+                question['options'] = []
+            if 'correct_option_index' not in question:
+                question['correct_option_index'] = 0
+            
+            questions.append(question)
+
+    except Exception as e:
+        print(f"Error in admin_manage_questions: {e}")
+        quiz = None
+        questions = []
+
+    if not quiz:
+        flash('Kuis tidak ditemukan.', 'danger')
+        return redirect(url_for('admin_quizzes'))
+
+    return render_template('admin/manage_questions.html', quiz=quiz, questions=questions)
+
+
+@app.route('/admin/quizzes/<quiz_id>/question/add', methods=['POST'])
+@admin_required
+def admin_add_question(quiz_id):
+    if request.method == 'POST':
+        try:
+            options = [request.form[f'option_{i}'] for i in range(1, 6) if request.form.get(f'option_{i}')]
+            correct_index = int(request.form.get('correct_option_index'))
+            question_text = request.form['question_text']
+
+            if not question_text or len(options) < 2 or correct_index < 1 or correct_index > len(options):
+                 flash('Harap lengkapi Teks Pertanyaan, minimal 2 Opsi, dan Kunci Jawaban yang valid.', 'danger')
+                 return redirect(url_for('admin_manage_questions', quiz_id=quiz_id))
+
+            new_question = {
+                'quiz_id': ObjectId(quiz_id),
+                'question_text': question_text, 
+                'options': options,
+                'correct_option_index': correct_index,
+                'text': question_text, 
+                'correct_answer': options[correct_index - 1] 
+            }
+            db.questions.insert_one(new_question)
+            
+            count = db.questions.count_documents({'quiz_id': ObjectId(quiz_id)})
+            db.quizzes.update_one(
+                {'_id': ObjectId(quiz_id)},
+                {'$set': {'question_count': count}}
+            )
+
+            flash('Soal berhasil ditambahkan.', 'success')
+        except Exception as e:
+            flash(f'Gagal menyimpan soal: {e}', 'danger')
+            
+    return redirect(url_for('admin_manage_questions', quiz_id=quiz_id))
+
+@app.route('/admin/quizzes/<quiz_id>/question/edit/<id>', methods=['POST'])
+@admin_required
+def admin_edit_question(quiz_id, id):
+    try:
+        options = [request.form[f'option_{i}'] for i in range(1, 6) if request.form.get(f'option_{i}')]
+        correct_index = int(request.form.get('correct_option_index'))
+        question_text = request.form['question_text']
+
+        if not question_text or len(options) < 2 or correct_index < 1 or correct_index > len(options):
+             flash('Validasi gagal. Harap lengkapi data dengan benar.', 'danger')
+             return redirect(url_for('admin_manage_questions', quiz_id=quiz_id))
+             
+        update_data = {
+            'question_text': question_text,
+            'options': options,
+            'correct_option_index': correct_index,
+            'text': question_text,
+            'correct_answer': options[correct_index - 1]
+        }
+        
+        db.questions.update_one(
+            {'_id': ObjectId(id), 'quiz_id': ObjectId(quiz_id)},
+            {'$set': update_data}
+        )
+        
+        flash('Soal berhasil diperbarui.', 'success')
+    except Exception as e:
+        flash(f'Gagal memperbarui soal: {e}', 'danger')
+        
+    return redirect(url_for('admin_manage_questions', quiz_id=quiz_id))
+
+
+@app.route('/admin/quizzes/<quiz_id>/question/delete/<id>', methods=['POST'])
+@admin_required
+def admin_delete_question(quiz_id, id):
+    try:
+        quiz_id_obj = ObjectId(quiz_id)
+        question_id_obj = ObjectId(id)
+        
+        result = db.questions.delete_one({'_id': question_id_obj, 'quiz_id': quiz_id_obj})
+        
+        if result.deleted_count == 1:
+            new_question_count = db.questions.count_documents({'quiz_id': quiz_id_obj})
+            db.quizzes.update_one(
+                {'_id': quiz_id_obj},
+                {'$set': {'question_count': new_question_count}}
+            )
+            flash('Soal berhasil dihapus.', 'success')
+        else:
+            flash('Gagal menghapus soal. Soal tidak ditemukan.', 'danger')
+            
+    except Exception as e:
+        flash(f'Terjadi kesalahan saat menghapus soal: {e}', 'danger')
+        
+    return redirect(url_for('admin_manage_questions', quiz_id=quiz_id))
+
+
+# =================================================================
+# --- ROUTE PENGGUNA (QUIZ) ---
+# =================================================================
+
+@app.route('/quiz')
+def quiz_list():
+    """Menampilkan daftar kuis berdasarkan kategori."""
+    all_quizzes = list(db.quizzes.find())
+    categories = list(db.categories.find())
+    
+    quizzes_by_category = {}
+    category_map = {str(cat['_id']): cat['name'] for cat in categories}
+
+    for quiz in all_quizzes:
+        cat_name = category_map.get(str(quiz.get('category_id')), 'Lainnya')
+        if cat_name not in quizzes_by_category:
+            quizzes_by_category[cat_name] = []
+        quizzes_by_category[cat_name].append(quiz)
+        
+    return render_template('quiz_list.html', quizzes_by_category=quizzes_by_category, all_quizzes=all_quizzes)
+
+@app.route('/quiz/<quiz_id>', methods=['GET'])
+@login_required 
+def start_quiz(quiz_id):
+    """Menampilkan halaman untuk menjawab kuis."""
+    
+    try:
+        quiz = db.quizzes.find_one({'_id': ObjectId(quiz_id)})
+        if not quiz:
+            flash('Kuis tidak ditemukan', 'danger')
+            return redirect(url_for('quiz_list'))
+            
+        questions = list(db.questions.find({'quiz_id': ObjectId(quiz_id)}))
+        
+        if not questions:
+            flash('Kuis ini belum memiliki soal.', 'warning')
+            return redirect(url_for('quiz_list'))
+            
+        return render_template('quiz_take.html', quiz=quiz, questions=questions)
+    except Exception as e:
+        flash(f'Error saat mengambil data kuis: {e}', 'danger')
+        return redirect(url_for('quiz_list'))
+
+@app.route('/quiz/<quiz_id>/submit', methods=['POST'])
+@login_required 
+def submit_quiz(quiz_id):
+    """Memproses jawaban, menghitung skor, dan membuat sertifikat jika lulus."""
+        
+    user_id = session.get('user_id')
+
+    try:
+        quiz = db.quizzes.find_one({'_id': ObjectId(quiz_id)})
+        questions = list(db.questions.find({'quiz_id': ObjectId(quiz_id)}))
+        
+        if not quiz or not questions:
+            flash('Kuis atau soal tidak ditemukan.', 'danger')
+            return redirect(url_for('quiz_list'))
+
+        total_questions = len(questions)
+        correct_answers = 0
+        
+        for question in questions:
+            question_id_str = str(question['_id'])
+            user_answer = request.form.get(question_id_str) 
+            
+            if user_answer and user_answer == question.get('correct_answer'):
+                correct_answers += 1
+
+        score_percentage = (correct_answers / total_questions) * 100
+        min_score = quiz.get('min_score', 80) 
+        passed = score_percentage >= min_score
+
+        result_data = {
+            'user_id': ObjectId(user_id),
+            'quiz_id': ObjectId(quiz_id),
+            'quiz_title': quiz['title'],
+            'score': int(score_percentage),
+            'total_questions': total_questions,
+            'correct_answers': correct_answers,
+            'min_score': min_score,
+            'passed': passed,
+            'created_at': datetime.now()
+        }
+        result = db.quiz_results.insert_one(result_data)
+
+        return redirect(url_for('quiz_result', result_id=result.inserted_id))
+
+    except Exception as e:
+        flash(f'Terjadi kesalahan saat memproses kuis: {e}', 'danger')
+        return redirect(url_for('quiz_list'))
+
+@app.route('/quiz/result/<result_id>')
+@login_required
+def quiz_result(result_id):
+    """Menampilkan halaman hasil kuis."""
+    try:
+        result = db.quiz_results.find_one({'_id': ObjectId(result_id)})
+        
+        if not result or str(result['user_id']) != session.get('user_id'): 
+            flash('Hasil tidak ditemukan atau Anda tidak memiliki akses.', 'danger')
+            return redirect(url_for('quiz_list'))
+            
+        return render_template('quiz_result.html', result=result)
+    except Exception as e:
+        flash(f'Error saat menampilkan hasil: {e}', 'danger')
+        return redirect(url_for('quiz_list'))
+    
 @app.route('/privacy-policy')
 @cache.cached(timeout=2)
 def privacy_policy():
@@ -1372,6 +1726,7 @@ def sitemap():
         {'loc': url_for('terms_and_conditions', _external=True), 'lastmod': datetime.now().isoformat(), 'changefreq': 'monthly', 'priority': '0.5'},
         {'loc': url_for('forgot_password', _external=True), 'lastmod': datetime.now().isoformat(), 'changefreq': 'monthly', 'priority': '0.4'},
         {'loc': url_for('blog', _external=True), 'lastmod': datetime.now().isoformat(), 'changefreq': 'weekly', 'priority': '0.9'},
+        {'loc': url_for('quiz_list', _external=True), 'lastmod': datetime.now().isoformat(), 'changefreq': 'weekly', 'priority': '0.7'},
     ]
 
     product_urls = []
@@ -1404,6 +1759,22 @@ def sitemap():
         print(f"Error fetching blog posts for sitemap: {e}")
 
     urls = static_urls + product_urls + blog_urls
+
+    quiz_urls = []
+    try:
+        quizzes = quizzes_collection.find({}, {'_id': 1})
+        for quiz in quizzes:
+            lastmod = datetime.now().isoformat() 
+            quiz_urls.append({
+                'loc': url_for('start_quiz', quiz_id=str(quiz['_id']), _external=True),
+                'lastmod': lastmod,
+                'changefreq': 'monthly',
+                'priority': '0.6'
+            })
+    except Exception as e:
+        print(f"Error fetching quizzes for sitemap: {e}")
+
+    urls = static_urls + product_urls + blog_urls + quiz_urls
 
     xml_content = '<?xml version="1.0" encoding="UTF-8"?>\n'
     xml_content += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
