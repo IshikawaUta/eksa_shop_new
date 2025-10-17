@@ -1638,7 +1638,7 @@ def start_quiz(quiz_id):
 @app.route('/quiz/<quiz_id>/submit', methods=['POST'])
 @login_required 
 def submit_quiz(quiz_id):
-    """Memproses jawaban, menghitung skor, dan membuat sertifikat jika lulus."""
+    """Memproses jawaban, menghitung skor, dan menyimpan detail jawaban."""
         
     user_id = session.get('user_id')
 
@@ -1652,13 +1652,25 @@ def submit_quiz(quiz_id):
 
         total_questions = len(questions)
         correct_answers = 0
-        
+        detailed_answers = [] 
+
         for question in questions:
             question_id_str = str(question['_id'])
             user_answer = request.form.get(question_id_str) 
+            correct_option = question.get('correct_answer')
+            is_correct = (user_answer == correct_option)
             
-            if user_answer and user_answer == question.get('correct_answer'):
+            if is_correct:
                 correct_answers += 1
+
+            detailed_answers.append({
+                'question_id': question_id_str,
+                'question_text': question.get('question_text', 'Teks pertanyaan hilang'),
+                'user_answer': user_answer if user_answer else 'Tidak Dijawab',
+                'correct_answer': correct_option,
+                'options': question.get('options', []),
+                'is_correct': is_correct
+            })
 
         score_percentage = (correct_answers / total_questions) * 100
         min_score = quiz.get('min_score', 80) 
@@ -1673,10 +1685,12 @@ def submit_quiz(quiz_id):
             'correct_answers': correct_answers,
             'min_score': min_score,
             'passed': passed,
-            'created_at': datetime.now()
+            'created_at': datetime.now(),
+            'detailed_answers': detailed_answers
         }
         result = db.quiz_results.insert_one(result_data)
 
+        flash('Kuis selesai! Lihat hasil Anda.', 'success')
         return redirect(url_for('quiz_result', result_id=result.inserted_id))
 
     except Exception as e:
