@@ -1597,13 +1597,38 @@ def admin_delete_question(quiz_id, id):
 # =================================================================
 
 @app.route('/quiz')
+@cache.cached(timeout=2)
 def quiz_list():
-    """Menampilkan daftar kuis berdasarkan kategori."""
-    all_quizzes = list(db.quizzes.find())
-    categories = list(db.categories.find())
+    """Menampilkan daftar kuis berdasarkan pencarian (q) dan kategori (category)."""
+    search_query = request.args.get('q', '').strip()
+    selected_category_param = request.args.get('category') 
+
+    query = {}
+
+    if search_query:
+        query['$or'] = [
+            {'title': {'$regex': re.compile(search_query, re.IGNORECASE)}},
+            {'description': {'$regex': re.compile(search_query, re.IGNORECASE)}}
+        ]
+
+    selected_category_for_template = selected_category_param
+    
+    if selected_category_param and selected_category_param not in ['all', 'None']:
+        category_doc = db.categories.find_one({'name': selected_category_param})
+        
+        if category_doc:
+            query['category_id'] = category_doc['_id']
+        else:
+            query = {'_id': None}  
+    else:
+        selected_category_for_template = 'all'
+
+    all_categories = sorted([cat['name'] for cat in db.categories.find({}, {'name': 1})])
+    
+    all_quizzes = list(db.quizzes.find(query).sort([('category_id', 1), ('title', 1)])) 
     
     quizzes_by_category = {}
-    category_map = {str(cat['_id']): cat['name'] for cat in categories}
+    category_map = {str(cat['_id']): cat['name'] for cat in db.categories.find()} 
 
     for quiz in all_quizzes:
         cat_name = category_map.get(str(quiz.get('category_id')), 'Lainnya')
@@ -1611,9 +1636,15 @@ def quiz_list():
             quizzes_by_category[cat_name] = []
         quizzes_by_category[cat_name].append(quiz)
         
-    return render_template('quiz_list.html', quizzes_by_category=quizzes_by_category, all_quizzes=all_quizzes)
+    return render_template('quiz_list.html', 
+                            all_quizzes=all_quizzes,
+                            quizzes_by_category=quizzes_by_category, 
+                            all_categories=all_categories,
+                            selected_category=selected_category_for_template,
+                            search_query=search_query)
 
 @app.route('/quiz/<quiz_id>', methods=['GET'])
+@cache.cached(timeout=2)
 @login_required 
 def start_quiz(quiz_id):
     """Menampilkan halaman untuk menjawab kuis."""
@@ -1636,6 +1667,7 @@ def start_quiz(quiz_id):
         return redirect(url_for('quiz_list'))
 
 @app.route('/quiz/<quiz_id>/submit', methods=['POST'])
+@cache.cached(timeout=2)
 @login_required 
 def submit_quiz(quiz_id):
     """Memproses jawaban, menghitung skor, dan menyimpan detail jawaban."""
@@ -1698,6 +1730,7 @@ def submit_quiz(quiz_id):
         return redirect(url_for('quiz_list'))
 
 @app.route('/quiz/result/<result_id>')
+@cache.cached(timeout=2)
 @login_required
 def quiz_result(result_id):
     """Menampilkan halaman hasil kuis."""
