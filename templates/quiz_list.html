@@ -79,8 +79,17 @@
             </div>
         {% endfor %}
     {% else %}
-        <div class="alert alert-info text-center">
-            Belum ada kuis yang tersedia saat ini.
+        <div class="col-12 text-center">
+            <p class="lead">Tidak ada kuis yang ditemukan sesuai kriteria Anda.</p>
+            {% if not search_query and selected_category == 'all' %}
+                <div class="alert alert-info text-center">
+                    Belum ada kuis yang tersedia saat ini.
+                </div>
+            {% else %}
+                <a href="{{ url_for('quiz_list', category='all', q='') }}" class="btn btn-secondary mt-3 rounded-pill">
+                    <i class="fas fa-undo"></i> Tampilkan semua kuis
+                </a>
+            {% endif %}
         </div>
     {% endif %}
 </div>
