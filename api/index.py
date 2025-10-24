@@ -42,6 +42,8 @@ project_root = os.path.join(current_dir, "..")
 app = Flask(__name__, root_path=project_root, template_folder="templates")
 app.static_folder = 'static'
 app.config['CACHE_TYPE'] = 'SimpleCache'
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+app.config['SESSION_COOKIE_SECURE'] = True
 cache = Cache(app)
 
 app.secret_key = os.getenv('SECRET_KEY')
