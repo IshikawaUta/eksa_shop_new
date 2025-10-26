@@ -256,12 +256,14 @@
             desktop : {
                 position : 'br',
                 xOffset : 15,
-                yOffset : 20
+                yOffset : 20,
+                display: 'none'
             },
             mobile : {
                 position : 'br',
                 xOffset : 0,
-                yOffset : 70
+                yOffset : 70,
+                display: 'none'
             }
         }
     };
@@ -273,6 +275,22 @@
     s1.setAttribute('crossorigin','*');
     s0.parentNode.insertBefore(s1,s0);
     })();
+
+    window.addEventListener('load', function() {
+        const loaderWrapper = document.getElementById('loader-wrapper');
+        
+        setTimeout(function() {
+            if (loaderWrapper && loaderWrapper.classList.contains('hidden')) {
+                if (typeof Tawk_API !== 'undefined' && Tawk_API.showWidget) {
+                    Tawk_API.showWidget();
+                }
+            }
+        }, 250);
+    });
+
+    if (typeof Tawk_API !== 'undefined' && Tawk_API.hideWidget) {
+        Tawk_API.hideWidget();
+    }
     </script>
     <script>
         const loaderWrapper = document.getElementById('loader-wrapper');
