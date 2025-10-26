@@ -66,25 +66,36 @@
         }
     </style>
 
-    <script>
-        function handleGoogleLogin(response) {
-            const idToken = response.credential;
+<script>
+    function handleGoogleLogin(response) {
+        const idToken = response.credential;
 
-            fetch('{{ url_for("google_callback") }}', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                },
-                body: `credential=${idToken}`
-            })
-            .then(response => response.json())
-            .then(data => {
-                console.log("Google Sign-In callback processed by server.");
-            })
-            .catch(error => {
-                console.error('Error sending ID token to server:', error);
-                alert('Login google berhasil. Silakan masuk halaman produk.');
-            });
-        }
-    </script>
+        fetch('{{ url_for("google_callback") }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: `credential=${idToken}`
+        })
+        .then(response => {
+            if (response.ok || response.status === 302) {
+                window.location.href = "{{ url_for('index') }}"; 
+                return {};
+            }
+            
+            return response.json(); 
+        })
+        .then(data => {
+            if (data && data.error) {
+                console.error("Server error:", data.error);
+                alert('Login Google gagal: ' + data.error);
+            } else {
+                 console.log("Google Sign-In callback processed successfully, redirecting...");
+            }
+        })
+        .catch(error => {
+            console.error('Error sending ID token to server:', error);
+        });
+    }
+</script>
 {% endblock %}
