@@ -42,6 +42,12 @@
     <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body class="bg-light d-flex flex-column min-vh-100">
+
+    <div id="loader-wrapper">
+        <div class="loader"></div>
+        <div class="loader-text">Loading...</div>
+    </div>
+
     <nav class="navbar navbar-expand-lg navbar-light navbar-white-fixed">
         <div class="container-fluid">
             <a class="navbar-brand fw-bold text-primary-gradient" href="/">
@@ -267,6 +273,32 @@
     s1.setAttribute('crossorigin','*');
     s0.parentNode.insertBefore(s1,s0);
     })();
+    </script>
+    <script>
+        const loaderWrapper = document.getElementById('loader-wrapper');
+        window.addEventListener('load', function() {
+            if (loaderWrapper) {
+                setTimeout(function() {
+                    loaderWrapper.classList.add('hidden');
+                }, 200); 
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', function() {
+            if (loaderWrapper) {
+                const internalLinks = document.querySelectorAll('a:not([target="_blank"]):not([href^="#"])');
+                
+                internalLinks.forEach(link => {
+                    link.addEventListener('click', function(event) {
+                        const href = link.getAttribute('href');
+                        
+                        if (href && !href.startsWith('http')) {
+                            loaderWrapper.classList.remove('hidden');
+                        }
+                    });
+                });
+            }
+        });
     </script>
     </body>
 </html>
